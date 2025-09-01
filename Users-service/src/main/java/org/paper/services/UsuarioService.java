@@ -35,7 +35,7 @@ public class UsuarioService {
         headers.setBearerAuth(token);
 
         HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-        String url = "http://localhost:8080/admin/realms/mi-realm/users";
+        String url = "http://localhost:8080/admin/realms/tesina/users";
         ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
 
         // Si se creó correctamente, asignar contraseña
@@ -48,7 +48,7 @@ public class UsuarioService {
 
     private void asignarPassword(UsuarioDAO usuario, String token) {
         // Obtener ID del usuario recién creado
-        String searchUrl = "http://localhost:8080/admin/realms/mi-realm/users?username=" + usuario.getUsername();
+        String searchUrl = "http://localhost:8080/admin/realms/tesina/users?username=" + usuario.getUsername();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -58,7 +58,7 @@ public class UsuarioService {
             String userId = (String) ((java.util.LinkedHashMap) searchResponse.getBody()[0]).get("id");
 
             // Endpoint para reset-password
-            String passwordUrl = "http://localhost:8080/admin/realms/mi-realm/users/" + userId + "/reset-password";
+            String passwordUrl = "http://localhost:8080/admin/realms/tesina/users/" + userId + "/reset-password";
 
             String passwordJson = String.format("{\"type\":\"password\",\"value\":\"%s\",\"temporary\":false}", usuario.getPassword());
             HttpHeaders pwdHeaders = new HttpHeaders();
