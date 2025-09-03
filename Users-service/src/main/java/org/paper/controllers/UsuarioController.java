@@ -1,6 +1,6 @@
 package org.paper.controllers;
 
-import org.paper.DAO.UsuarioDAO;
+import org.paper.DTO.UsuarioDAO;
 import org.paper.services.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,4 +19,11 @@ public class UsuarioController {
     public ResponseEntity<String> crearUsuario(@RequestBody UsuarioDAO usuario) {
         return usuarioService.crearUsuario(usuario);
     }
+
+    @DeleteMapping("/eliminar/{username}")
+    public ResponseEntity<String> eliminarUsuario(@PathVariable String username) {
+        return usuarioService.eliminarUsuario(username);
+    }
+
+
 }

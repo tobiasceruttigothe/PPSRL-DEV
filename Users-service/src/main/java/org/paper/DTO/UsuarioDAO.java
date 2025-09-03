@@ -1,11 +1,8 @@
-package org.paper.DAO;
+package org.paper.DTO;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 //@NoArgsConstructor
@@ -17,5 +14,6 @@ public class UsuarioDAO {
         private String email;
         private String password;
         private boolean enabled = true;
-        private boolean emailVerified = false;
+        private boolean emailVerified = true;
 }
+
