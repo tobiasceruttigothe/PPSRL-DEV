@@ -141,7 +141,6 @@ public class UsuarioService {
                     .body("Error al eliminar usuario: " + e.getMessage());
         }
     }
-
 }
 
 

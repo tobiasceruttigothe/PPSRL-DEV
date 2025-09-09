@@ -32,8 +32,6 @@ public class KeycloakAdminService {
         if (cachedToken != null && System.currentTimeMillis() < tokenExpiryTime) {
             return cachedToken;
         }
-
-        // Ahora la URL se construye dinámicamente
         String url = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
 
         HttpHeaders headers = new HttpHeaders();
@@ -54,5 +52,4 @@ public class KeycloakAdminService {
 
         return cachedToken;
     }
-
 }

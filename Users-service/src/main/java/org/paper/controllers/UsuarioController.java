@@ -25,5 +25,4 @@ public class UsuarioController {
         return usuarioService.eliminarUsuario(username);
     }
 
-
 }
