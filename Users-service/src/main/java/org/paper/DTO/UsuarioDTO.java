@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 //@NoArgsConstructor
 @Data
-public class UsuarioDAO {
+public class UsuarioDTO {
         private String username;
         private String firstName;
         private String lastName;

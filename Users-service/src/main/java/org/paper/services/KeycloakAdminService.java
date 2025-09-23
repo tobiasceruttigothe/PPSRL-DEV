@@ -1,19 +1,19 @@
 package org.paper.services;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class KeycloakAdminService {
 
-    @Value("${keycloak.server-url}")
-    private String serverUrl;
+    private final WebClient webClient;
 
     @Value("${keycloak.realm}")
     private String realm;
@@ -24,7 +24,6 @@ public class KeycloakAdminService {
     @Value("${keycloak.client-secret}")
     private String clientSecret;
 
-    private final RestTemplate restTemplate = new RestTemplate();
     private String cachedToken;
     private long tokenExpiryTime;
 
@@ -32,22 +31,19 @@ public class KeycloakAdminService {
         if (cachedToken != null && System.currentTimeMillis() < tokenExpiryTime) {
             return cachedToken;
         }
-        String url = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        Map<String, Object> response = webClient.post()
+                .uri("/realms/{realm}/protocol/openid-connect/token", realm)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData("client_id", clientId)
+                        .with("client_secret", clientSecret)
+                        .with("grant_type", "client_credentials"))
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("client_id", clientId);           // ← Viene de configuración
-        body.add("client_secret", clientSecret);  // ← Viene de configuración
-        body.add("grant_type", "client_credentials");
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-
-        cachedToken = (String) response.getBody().get("access_token");
-        Integer expiresIn = (Integer) response.getBody().get("expires_in");
+        cachedToken = (String) response.get("access_token");
+        Integer expiresIn = (Integer) response.get("expires_in");
         tokenExpiryTime = System.currentTimeMillis() + (expiresIn - 10) * 1000;
 
         return cachedToken;

@@ -1,9 +1,12 @@
 package org.paper.controllers;
 
-import org.paper.DTO.UsuarioDAO;
+import org.paper.DTO.UsuarioDTO;
 import org.paper.services.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -16,7 +19,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<String> crearUsuario(@RequestBody UsuarioDAO usuario) {
+    public ResponseEntity<String> crearUsuario(@RequestBody UsuarioDTO usuario) {
         return usuarioService.crearUsuario(usuario);
     }
 
@@ -24,4 +27,11 @@ public class UsuarioController {
     public ResponseEntity<String> eliminarUsuario(@PathVariable String username) {
         return usuarioService.eliminarUsuario(username);
     }
+
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> listarUsuarios() {
+        return usuarioService.listarUsuarios();
+    }
+
+
 }
