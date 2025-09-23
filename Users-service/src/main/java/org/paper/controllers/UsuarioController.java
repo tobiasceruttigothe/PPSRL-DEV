@@ -24,5 +24,4 @@ public class UsuarioController {
     public ResponseEntity<String> eliminarUsuario(@PathVariable String username) {
         return usuarioService.eliminarUsuario(username);
     }
-
 }
