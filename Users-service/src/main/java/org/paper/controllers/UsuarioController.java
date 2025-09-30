@@ -1,7 +1,10 @@
 package org.paper.controllers;
 
-import org.paper.DTO.UsuarioDTO;
+import jakarta.validation.Valid;
+import org.paper.DTO.UsuarioCreateDTO;
+import org.paper.DTO.UsuarioResponseDTO;
 import org.paper.services.UsuarioService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,20 +21,45 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
-    @PostMapping("/crear")
-    public ResponseEntity<String> crearUsuario(@RequestBody UsuarioDTO usuario) {
-        return usuarioService.crearUsuario(usuario);
+    @PostMapping("/create")
+    public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioCreateDTO usuarioDTO) {
+        return usuarioService.crearUsuario(usuarioDTO);
     }
 
-    @DeleteMapping("/eliminar/{username}")
+    @PutMapping("/{userId}/rol/admin")
+    public ResponseEntity<String> asignarRolAdmin(@PathVariable String userId) {
+        usuarioService.cambiarRolUsuarioConToken(userId, "ADMIN");
+        return ResponseEntity.ok("Rol cambiado a ADMIN");
+    }
+
+    @PutMapping("/{userId}/rol/cliente")
+    public ResponseEntity<String> asignarRolCliente(@PathVariable String userId) {
+        usuarioService.cambiarRolUsuarioConToken(userId, "CLIENTE");
+        return ResponseEntity.ok("Rol cambiado a CLIENTE");
+    }
+
+    @DeleteMapping("/eliminate/{username}")
     public ResponseEntity<String> eliminarUsuario(@PathVariable String username) {
         return usuarioService.eliminarUsuario(username);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> listarUsuarios() {
-        return usuarioService.listarUsuarios();
+    @GetMapping("/list/users")
+    public ResponseEntity<List<UsuarioResponseDTO>> listarUsuarios() {
+        return usuarioService.listarUsuarios(); // Todos
     }
 
+    @GetMapping("/list/users/interested")
+    public ResponseEntity<List<UsuarioResponseDTO>> listarUsuariosInteresados() {
+        return usuarioService.listarUsuariosPorRol("INTERESADO");
+    }
 
+    @GetMapping("/list/users/clients")
+    public ResponseEntity<List<UsuarioResponseDTO>> listarUsuariosClientes() {
+        return usuarioService.listarUsuariosPorRol("CLIENTE");
+    }
+
+    @GetMapping("/list/users/admins")
+    public ResponseEntity<List<UsuarioResponseDTO>> listarUsuariosAdmins() {
+        return usuarioService.listarUsuariosPorRol("ADMIN");
+    }
 }

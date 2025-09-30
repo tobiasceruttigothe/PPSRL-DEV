@@ -17,7 +17,7 @@ import java.util.UUID;
 public class Usuario {
         @Id
         @Column(nullable = false, unique = true)
-        private UUID id;  // ← el keycloak_id
+        private UUID id;  // el keycloak_id
 
         @Column(name = "fecha_registro", nullable = false)
         private LocalDateTime fechaRegistro;
