@@ -182,8 +182,8 @@ public class UsuarioService {
             throw new RuntimeException("Error al asignar password: " + e.getMessage(), e);
         }
     }
-
-    private void eliminarUsuarioEnKeycloak(String userId, String token) {
+//revisar public
+    public void eliminarUsuarioEnKeycloak(String userId, String token) {
         webClient.delete()
                 .uri("/admin/realms/tesina/users/{id}", userId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -191,8 +191,13 @@ public class UsuarioService {
                 .toBodilessEntity()
                 .block();
     }
-
-    private String obtenerUserId(String username, String token) {
+//revisar
+    public String prueba(String username) {
+        String token = keycloakAdminService.getAdminToken();
+        return obtenerUserId(username, token);
+    }
+//revisar, sacar public
+    public String obtenerUserId(String username, String token) {
         List<Map<String, Object>> body = webClient.get()
                 .uri("/admin/realms/tesina/users?username={username}", username)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -207,7 +212,7 @@ public class UsuarioService {
         return (String) body.get(0).get("id");
     }
 
-    @Transactional
+   /* @Transactional
     public ResponseEntity<String> eliminarUsuario(String username) {
         String token = keycloakAdminService.getAdminToken();
         try {
@@ -238,49 +243,119 @@ public class UsuarioService {
         }
     }
 
+    */
+
+    @Transactional
+    public ResponseEntity<String> eliminarUsuario(String username) {
+        String token = keycloakAdminService.getAdminToken();
+        log.debug("Iniciando proceso de eliminación para usuario: {}", username);
+
+        try {
+            String userId = obtenerUserId(username, token);
+            if (userId == null) {
+                log.warn("Usuario no encontrado en Keycloak: {}", username);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Usuario no encontrado en Keycloak: " + username);
+            }
+
+            log.debug("Usuario {} encontrado con ID: {}", username, userId);
+
+            Optional<Usuario> backup = usuarioRepository.findById(UUID.fromString(userId));
+            log.debug("Backup del usuario en Postgres creado: {}", backup.isPresent());
+
+            // Eliminar de Postgres
+            usuarioRepository.deleteById(UUID.fromString(userId));
+            log.info("Usuario {} eliminado de Postgres con ID: {}", username, userId);
+
+            try {
+                eliminarUsuarioEnKeycloak(userId, token);
+                log.info("Usuario {} eliminado correctamente de Keycloak con ID: {}", username, userId);
+            } catch (Exception e) {
+                log.error("Error eliminando usuario {} en Keycloak. Restaurando backup en Postgres. Detalle: {}", username, e.getMessage(), e);
+                backup.ifPresent(usuario -> {
+                    usuarioRepository.save(usuario);
+                    log.warn("Usuario {} restaurado en Postgres tras fallo en Keycloak", username);
+                });
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Fallo en Keycloak, usuario restaurado en Postgres");
+            }
+
+            log.debug("Proceso de eliminación completado para usuario: {}", username);
+            return ResponseEntity.ok("Usuario eliminado correctamente");
+        } catch (Exception e) {
+            log.error("Error inesperado al eliminar usuario {}. Detalle: {}", username, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al eliminar usuario: " + e.getMessage());
+        }
+    }
+
+
     public void cambiarRolUsuarioConToken(String userId, String nuevoRol) {
         String token = keycloakAdminService.getAdminToken();
         cambiarRolUsuario(userId, nuevoRol, token);
     }
     public void cambiarRolUsuario(String userId, String nuevoRol, String token) {
-        // 1. Obtener todos los roles actuales del usuario
-        List<Map<String, Object>> rolesActuales = webClient.get()
-                .uri("/admin/realms/tesina/users/{userId}/role-mappings/realm", userId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .retrieve()
-                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .collectList()
-                .block();
+        log.debug("Iniciando cambio de rol para usuario con ID: {}. Nuevo rol: {}", userId, nuevoRol);
 
-        if (rolesActuales != null && !rolesActuales.isEmpty()) {
-            // 2. Eliminar roles actuales
-            webClient.method(HttpMethod.DELETE)
+        try {
+            // 1. Obtener todos los roles actuales del usuario
+            List<Map<String, Object>> rolesActuales = webClient.get()
                     .uri("/admin/realms/tesina/users/{userId}/role-mappings/realm", userId)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .bodyValue(rolesActuales)
+                    .retrieve()
+                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .collectList()
+                    .block();
+
+            log.debug("Roles actuales obtenidos para usuario {}: {}", userId, rolesActuales);
+
+            if (rolesActuales != null && !rolesActuales.isEmpty()) {
+                // 2. Eliminar roles actuales
+                log.info("Eliminando {} roles actuales del usuario {}", rolesActuales.size(), userId);
+                webClient.method(HttpMethod.DELETE)
+                        .uri("/admin/realms/tesina/users/{userId}/role-mappings/realm", userId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .bodyValue(rolesActuales)
+                        .retrieve()
+                        .toBodilessEntity()
+                        .block();
+                log.debug("Roles actuales eliminados para usuario {}", userId);
+            } else {
+                log.debug("El usuario {} no tenía roles previos asignados", userId);
+            }
+
+            // 3. Obtener el rol nuevo
+            log.debug("Obteniendo rol {} desde Keycloak", nuevoRol);
+            Map<String, Object> role = webClient.get()
+                    .uri("/admin/realms/tesina/roles/{roleName}", nuevoRol)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+
+            if (role == null) {
+                log.error("No se encontró el rol {} en Keycloak", nuevoRol);
+                throw new RuntimeException("Rol no encontrado: " + nuevoRol);
+            }
+
+            log.debug("Rol {} obtenido correctamente: {}", nuevoRol, role);
+
+            // 4. Asignar el nuevo rol
+            log.info("Asignando rol {} al usuario {}", nuevoRol, userId);
+            webClient.post()
+                    .uri("/admin/realms/tesina/users/{userId}/role-mappings/realm", userId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .bodyValue(List.of(role))
                     .retrieve()
                     .toBodilessEntity()
                     .block();
+
+            log.info("Rol {} asignado correctamente al usuario {}", nuevoRol, userId);
+
+        } catch (Exception e) {
+            log.error("Error al cambiar rol del usuario {}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Fallo cambiando rol del usuario: " + e.getMessage(), e);
         }
-
-        // 3. Obtener el rol nuevo
-        Map<String, Object> role = webClient.get()
-                .uri("/admin/realms/tesina/roles/{roleName}", nuevoRol)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .block();
-
-        if (role == null) throw new RuntimeException("Rol no encontrado: " + nuevoRol);
-
-        // 4. Asignar el nuevo rol
-        webClient.post()
-                .uri("/admin/realms/tesina/users/{userId}/role-mappings/realm", userId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .bodyValue(List.of(role))
-                .retrieve()
-                .toBodilessEntity()
-                .block();
     }
 
     public ResponseEntity<List<UsuarioResponseDTO>> listarUsuarios() {
@@ -342,15 +417,30 @@ public class UsuarioService {
     }
 
     public ResponseEntity<List<UsuarioResponseDTO>> listarUsuariosPorRol(String rolBuscado) {
-        ResponseEntity<List<UsuarioResponseDTO>> all = listarUsuarios();
-        if (!all.getStatusCode().is2xxSuccessful() || all.getBody() == null) {
+        log.debug("Iniciando búsqueda de usuarios con el rol: {}", rolBuscado);
+
+        try {
+            ResponseEntity<List<UsuarioResponseDTO>> all = listarUsuarios();
+
+            if (!all.getStatusCode().is2xxSuccessful() || all.getBody() == null) {
+                log.error("Error al listar usuarios. Código de estado: {}. Cuerpo nulo: {}",
+                        all.getStatusCode(), (all.getBody() == null));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+            }
+
+            List<UsuarioResponseDTO> filtrados = all.getBody().stream()
+                    .filter(u -> u.getRoles().contains(rolBuscado))
+                    .collect(Collectors.toList());
+
+            log.info("Usuarios encontrados con el rol '{}': {}", rolBuscado, filtrados.size());
+
+            return ResponseEntity.ok(filtrados);
+
+        } catch (Exception e) {
+            log.error("Error inesperado al listar usuarios por rol {}: {}", rolBuscado, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
         }
-
-        List<UsuarioResponseDTO> filtrados = all.getBody().stream()
-                .filter(u -> u.getRoles().contains(rolBuscado))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(filtrados);
     }
+
+
 }

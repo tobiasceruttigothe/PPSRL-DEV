@@ -21,17 +21,24 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
+//eliminar
+    @GetMapping("/obtener/{username}")
+    public ResponseEntity<?> obtenerUsuarioPorId(@PathVariable String username) {
+        return ResponseEntity.ok(usuarioService.prueba(username));
+    }
+
+
     @PostMapping("/create")
     public ResponseEntity<?> crearUsuario(@Valid @RequestBody UsuarioCreateDTO usuarioDTO) {
         return usuarioService.crearUsuario(usuarioDTO);
     }
-
+//revisar, cambiar por username
     @PutMapping("/{userId}/rol/admin")
     public ResponseEntity<String> asignarRolAdmin(@PathVariable String userId) {
         usuarioService.cambiarRolUsuarioConToken(userId, "ADMIN");
         return ResponseEntity.ok("Rol cambiado a ADMIN");
     }
-
+//revisar, cambiar por username
     @PutMapping("/{userId}/rol/cliente")
     public ResponseEntity<String> asignarRolCliente(@PathVariable String userId) {
         usuarioService.cambiarRolUsuarioConToken(userId, "CLIENTE");
