@@ -48,7 +48,6 @@ public class UsuarioService {
         }
 
         String userId = null;
-        boolean usuarioExisteEnKeycloak = false;
 
         try {
             // 1. Verificar si el usuario ya existe en Keycloak
@@ -60,7 +59,6 @@ public class UsuarioService {
                     throw new UsuarioYaExisteException(usuario.getUsername());
                 }
             } catch (WebClientResponseException.NotFound e) {
-                // Usuario no existe, podemos continuar
                 log.debug("Usuario {} no existe, procediendo con la creación", usuario.getUsername());
             }
 
@@ -100,10 +98,7 @@ public class UsuarioService {
 
             if (response == null || !response.getStatusCode().is2xxSuccessful()) {
                 log.error("Respuesta inválida de Keycloak al crear usuario: {}", response);
-                throw new KeycloakException(
-                        "crear usuario",
-                        "Respuesta inválida del servidor"
-                );
+                throw new KeycloakException("crear usuario", "Respuesta inválida del servidor");
             }
 
             // 3. Obtener UUID
@@ -111,13 +106,9 @@ public class UsuarioService {
             userId = obtenerUserId(usuario.getUsername(), token);
             if (userId == null) {
                 log.error("No se pudo obtener el UUID de Keycloak para: {}", usuario.getUsername());
-                throw new KeycloakException(
-                        "obtener UUID",
-                        "No se pudo obtener el identificador del usuario creado"
-                );
+                throw new KeycloakException("obtener UUID", "No se pudo obtener el identificador del usuario creado");
             }
 
-            usuarioExisteEnKeycloak = true;
             log.info("Usuario creado en Keycloak con ID: {}", userId);
 
             // 4. Asignar password
@@ -126,48 +117,26 @@ public class UsuarioService {
                 asignarPassword(usuario, token, userId);
             }
 
-            // 5. Guardar en Postgres (protegido por @Transactional)
-            log.debug("Guardando usuario en base de datos");
-            Usuario entity = new Usuario();
-            entity.setId(UUID.fromString(userId));
-            entity.setFechaRegistro(LocalDateTime.now());
+            // 5. Guardar en Postgres con estado PENDING
+            log.debug("Guardando usuario en base de datos con estado PENDING");
+            Usuario entity = new Usuario(UUID.fromString(userId));
             usuarioRepository.save(entity);
 
-            // 6. Asignar rol por defecto (INTERESADO)
-            log.debug("Asignando rol INTERESADO");
-            cambiarRolUsuario(userId, "INTERESADO", token);
+            log.info("Usuario {} creado con estado PENDING. Será activado por el proceso en background.",
+                    usuario.getUsername());
 
-            // 7. Enviar email de verificación
-            log.debug("Enviando email de verificación");
-            try {
-                emailVerificationService.createAndSendVerification(userId, usuario.getUsername(), usuario.getEmail());
-            } catch (Exception e) {
-                // Email no es crítico
-                log.warn("No se pudo enviar email de verificación a {}: {}",
-                        usuario.getEmail(), e.getMessage());
-            }
-
-            log.info("Usuario {} creado correctamente", usuario.getUsername());
-            return ResponseEntity.ok("Usuario creado correctamente. Se envió mail de verificación.");
+            return ResponseEntity.ok(
+                    "Usuario creado correctamente. La configuración se completará en unos momentos."
+            );
 
         } catch (UsuarioYaExisteException | KeycloakException | ValidationException e) {
             log.error("Error conocido durante la creación del usuario {}: {}",
                     usuario.getUsername(), e.getMessage());
-
-            // Intentar rollback si el usuario fue creado en Keycloak
-            if (usuarioExisteEnKeycloak && userId != null) {
-                intentarRollbackKeycloak(userId, token);
-            }
             throw e;
 
         } catch (Exception e) {
             log.error("Error inesperado durante la creación del usuario {}: {}",
                     usuario.getUsername(), e.getMessage(), e);
-
-            // Intentar rollback si el usuario fue creado en Keycloak
-            if (usuarioExisteEnKeycloak && userId != null) {
-                intentarRollbackKeycloak(userId, token);
-            }
 
             throw new KeycloakException(
                     "crear usuario",
@@ -191,56 +160,7 @@ public class UsuarioService {
             // No lanzar excepción aquí, ya estamos en manejo de error
         }
     }
-/*
-    private void enviarEmailVerificacion(String userId, String token) {
-        try {
-            log.debug("Enviando email de verificación a usuario: {}", userId);
-            webClient.put()
-                    .uri("/admin/realms/tesina/users/{userId}/send-verify-email", userId)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-            log.debug("Email de verificación enviado correctamente");
-        } catch (WebClientResponseException e) {
-            log.error("Error al enviar email. Status: {}, Body: {}",
-                    e.getStatusCode(), e.getResponseBodyAsString());
-            throw new EmailException(
-                    userId,
-                    "Error al enviar email de verificación desde Keycloak",
-                    e
-            );
-        }
-    }
 
- */
-/*
-    public void verificarEmailUsuario(String userId) {
-        String token = keycloakAdminService.getAdminToken();
-        String jsonBody = "{ \"emailVerified\": true }";
-
-        try {
-            webClient.put()
-                    .uri("/admin/realms/tesina/users/{id}", userId)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(jsonBody)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-
-            log.info("Email verificado para usuario: {}", userId);
-        } catch (WebClientResponseException e) {
-            log.error("Error al verificar email del usuario {}: {}", userId, e.getMessage());
-            throw new KeycloakException(
-                    "verificar email",
-                    e.getStatusCode().value(),
-                    e.getResponseBodyAsString()
-            );
-        }
-    }
-
- */
 
     private void asignarPassword(UsuarioCreateDTO usuario, String token, String userId) {
         log.debug("Asignando password para usuario: {}", userId);

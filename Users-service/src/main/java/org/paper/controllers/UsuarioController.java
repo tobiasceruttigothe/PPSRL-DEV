@@ -1,22 +1,32 @@
 package org.paper.controllers;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.paper.dto.UsuarioCreateDTO;
 import org.paper.dto.UsuarioResponseDTO;
+import org.paper.entity.Usuario;
+import org.paper.entity.UsuarioStatus;
+import org.paper.repository.UsuarioRepository;
+import org.paper.services.UsuarioActivacionService;
 import org.paper.services.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
+    private final UsuarioActivacionService usuarioActivacionService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, UsuarioRepository usuarioRepository, UsuarioActivacionService usuarioActivacionService) {
         this.usuarioService = usuarioService;
+        this.usuarioRepository = usuarioRepository;
+        this.usuarioActivacionService = usuarioActivacionService;
     }
 
 //eliminar
@@ -67,4 +77,40 @@ public class UsuarioController {
     public ResponseEntity<List<UsuarioResponseDTO>> listarUsuariosAdmins() {
         return usuarioService.listarUsuariosPorRol("ADMIN");
     }
+
+
+
+
+
+    /**
+     * Listar usuarios fallidos (solo admin)
+     */
+    @GetMapping("/failed")
+    public ResponseEntity<List<Usuario>> listarUsuariosFallidos() {
+        log.info("Listando usuarios fallidos");
+        List<Usuario> fallidos = usuarioRepository.findByStatusOrderByFechaRegistroDesc(UsuarioStatus.FAILED);
+        return ResponseEntity.ok(fallidos);
+    }
+
+    /**
+     * Listar usuarios pendientes (solo admin)
+     */
+    @GetMapping("/pending")
+    public ResponseEntity<List<Usuario>> listarUsuariosPendientes() {
+        log.info("Listando usuarios pendientes");
+        List<Usuario> pendientes = usuarioRepository.findByStatus(UsuarioStatus.PENDING);
+        return ResponseEntity.ok(pendientes);
+    }
+
+    /**
+     * Reintentar activación de usuario fallido manualmente
+     */
+    @PostMapping("/retry/{userId}")
+    public ResponseEntity<String> reintentarUsuario(@PathVariable String userId) {
+        log.info("Reintento manual solicitado para usuario: {}", userId);
+        usuarioActivacionService.reintentarUsuarioFallido(userId);
+        return ResponseEntity.ok("Usuario enviado a reprocesamiento");
+    }
+
+
 }
