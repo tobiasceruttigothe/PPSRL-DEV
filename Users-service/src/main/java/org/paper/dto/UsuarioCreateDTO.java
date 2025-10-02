@@ -1,4 +1,4 @@
-package org.paper.DTO;
+package org.paper.dto;
 
 
 import lombok.AllArgsConstructor;

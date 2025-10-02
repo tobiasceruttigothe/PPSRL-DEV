@@ -1,15 +1,13 @@
 package org.paper.controllers;
 
 import jakarta.validation.Valid;
-import org.paper.DTO.UsuarioCreateDTO;
-import org.paper.DTO.UsuarioResponseDTO;
+import org.paper.dto.UsuarioCreateDTO;
+import org.paper.dto.UsuarioResponseDTO;
 import org.paper.services.UsuarioService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")

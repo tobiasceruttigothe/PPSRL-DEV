@@ -3,21 +3,18 @@ package org.paper.services;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.paper.DTO.UsuarioCreateDTO;
-import org.paper.DTO.UsuarioResponseDTO;
+import org.paper.dto.UsuarioCreateDTO;
+import org.paper.dto.UsuarioResponseDTO;
 import org.paper.entity.Usuario;
 import org.paper.repository.UsuarioRepository;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

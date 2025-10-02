@@ -25,6 +25,8 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable) // Deshabilitar CSRF (para APIs REST)
+                .cors(cors -> {}) // ← AGREGAR ESTO: Habilita CORS (usa el CorsWebFilter)
                 .authorizeExchange(exchanges -> exchanges
                         // Solo ADMIN puede acceder al microservicio de usuarios
                         .pathMatchers("/api/usuarios/**").hasRole("ADMIN")
@@ -35,7 +37,6 @@ public class SecurityConfig {
                 );
         return http.build();
     }
-
     /**
      * Extrae los roles desde realm_access.roles en el JWT de Keycloak
      * Adaptado para WebFlux: retorna Mono<AbstractAuthenticationToken>
