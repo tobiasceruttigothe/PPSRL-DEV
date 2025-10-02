@@ -30,6 +30,8 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         // Solo ADMIN puede acceder al microservicio de usuarios
                         .pathMatchers("/api/usuarios/**").hasRole("ADMIN")
+                        //Revisar
+                        .pathMatchers("/api/auth/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

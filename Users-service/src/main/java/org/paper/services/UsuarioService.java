@@ -24,13 +24,15 @@ public class UsuarioService {
     private final KeycloakAdminService keycloakAdminService;
     private final UsuarioRepository usuarioRepository;
     private final WebClient webClient;
+    private final EmailVerificationService emailVerificationService;
 
     public UsuarioService(KeycloakAdminService keycloakAdminService,
                           UsuarioRepository usuarioRepository,
-                          WebClient webClient) {
+                          WebClient webClient, EmailVerificationService emailVerificationService) {
         this.keycloakAdminService = keycloakAdminService;
         this.usuarioRepository = usuarioRepository;
         this.webClient = webClient;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @Transactional
@@ -138,19 +140,17 @@ public class UsuarioService {
             // 7. Enviar email de verificación
             log.debug("Enviando email de verificación");
             try {
-                enviarEmailVerificacion(userId, token);
+                emailVerificationService.createAndSendVerification(userId, usuario.getUsername(), usuario.getEmail());
             } catch (Exception e) {
-                // Email no es crítico, logeamos pero no fallamos
+                // Email no es crítico
                 log.warn("No se pudo enviar email de verificación a {}: {}",
                         usuario.getEmail(), e.getMessage());
-                // Podrías marcar el usuario para reenvío posterior
             }
 
             log.info("Usuario {} creado correctamente", usuario.getUsername());
             return ResponseEntity.ok("Usuario creado correctamente. Se envió mail de verificación.");
 
         } catch (UsuarioYaExisteException | KeycloakException | ValidationException e) {
-            // Estas excepciones ya están bien formateadas, solo las re-lanzamos
             log.error("Error conocido durante la creación del usuario {}: {}",
                     usuario.getUsername(), e.getMessage());
 
@@ -158,7 +158,6 @@ public class UsuarioService {
             if (usuarioExisteEnKeycloak && userId != null) {
                 intentarRollbackKeycloak(userId, token);
             }
-
             throw e;
 
         } catch (Exception e) {
@@ -192,7 +191,7 @@ public class UsuarioService {
             // No lanzar excepción aquí, ya estamos en manejo de error
         }
     }
-
+/*
     private void enviarEmailVerificacion(String userId, String token) {
         try {
             log.debug("Enviando email de verificación a usuario: {}", userId);
@@ -214,6 +213,8 @@ public class UsuarioService {
         }
     }
 
+ */
+/*
     public void verificarEmailUsuario(String userId) {
         String token = keycloakAdminService.getAdminToken();
         String jsonBody = "{ \"emailVerified\": true }";
@@ -238,6 +239,8 @@ public class UsuarioService {
             );
         }
     }
+
+ */
 
     private void asignarPassword(UsuarioCreateDTO usuario, String token, String userId) {
         log.debug("Asignando password para usuario: {}", userId);

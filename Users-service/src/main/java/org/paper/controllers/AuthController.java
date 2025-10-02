@@ -1,41 +1,30 @@
 package org.paper.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import org.paper.services.KeycloakAdminService;
-import org.paper.services.VerificationTokenService;
+import org.paper.services.EmailVerificationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @Slf4j
 public class AuthController {
 
-    private final VerificationTokenService tokenService;
-    private final KeycloakAdminService keycloakAdminService;
+    private final EmailVerificationService verificationService;
 
-    public AuthController(VerificationTokenService tokenService,
-                          KeycloakAdminService keycloakAdminService) {
-        this.tokenService = tokenService;
-        this.keycloakAdminService = keycloakAdminService;
+    public AuthController(EmailVerificationService verificationService) {
+        this.verificationService = verificationService;
     }
 
+    // El frontend hará POST (o GET) a este endpoint con token
     @PostMapping("/verify-email")
-    public ResponseEntity<String> verificarEmail(@RequestParam String token) {
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
         try {
-            log.info("Verificando email con token {}", token);
-
-            String userId = tokenService.validarToken(token);
-
-            String adminToken = keycloakAdminService.getAdminToken();
-            keycloakAdminService.marcarEmailComoVerificado(userId, adminToken);
-
+            log.info("Verificación de email solicitada");
+            verificationService.verifyTokenAndMarkEmail(token);
             return ResponseEntity.ok("Email verificado correctamente");
         } catch (Exception e) {
-            log.error("Error verificando email: {}", e.getMessage());
+            log.error("Error verificando token: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body("Token inválido o expirado");
         }
     }
