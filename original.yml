@@ -1,9 +1,13 @@
 version: "3.9"
 
 services:
+  # ============================================
+  # PostgreSQL para Keycloak
+  # ============================================
   kc-postgres:
     image: postgres:16-alpine
     container_name: kc-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -17,10 +21,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
+  # ============================================
+  # Keycloak (Servidor de autenticación)
+  # ============================================
   keycloak:
     image: quay.io/keycloak/keycloak:23.0
     container_name: keycloak
+    restart: unless-stopped
     depends_on:
       kc-postgres:
         condition: service_healthy
@@ -37,23 +46,33 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
       KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_DB_POOL_INITIAL_SIZE: 5
+      KC_DB_POOL_MIN_SIZE: 5
+      KC_DB_POOL_MAX_SIZE: 20
+      KC_LOG_LEVEL: info
     command: start-dev
     networks:
       - backend-network
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nConnection: close\r\n\r\n' >&3;grep -q '200 OK' <&3"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;grep -q '200 OK' <&3"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
 
+  # ============================================
+  # PostgreSQL para la aplicación
+  # ============================================
   app-postgres:
     image: postgres:16-alpine
     container_name: app-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: appdb
       POSTGRES_USER: appuser
       POSTGRES_PASSWORD: apppass
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
     ports:
       - "5433:5432"
     volumes:
@@ -66,12 +85,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
+  # ============================================
+  # Users Service (Microservicio de usuarios)
+  # ============================================
   users-service:
     build:
       context: ./Users-service
       dockerfile: Dockerfile
     container_name: users-service
+    restart: unless-stopped
     depends_on:
       app-postgres:
         condition: service_healthy
@@ -80,20 +104,29 @@ services:
     ports:
       - "9091:9091"
     environment:
+      # Keycloak config (usar nombres de servicio Docker)
       KEYCLOAK_SERVER_URL: http://keycloak:8080
       KEYCLOAK_REALM: tesina
       KEYCLOAK_CLIENT_ID: backend-service
       KEYCLOAK_CLIENT_SECRET: siZIjoNYryGmXBPAhafsYMTyW0WtnU6z
+      
+      # Database config (usar nombre de servicio Docker)
       SPRING_DATASOURCE_URL: jdbc:postgresql://app-postgres:5432/appdb
       SPRING_DATASOURCE_USERNAME: appuser
       SPRING_DATASOURCE_PASSWORD: apppass
+      
+      # Mail config
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
       SPRING_MAIL_USERNAME: no.reply.papersrl@gmail.com
-      SPRING_MAIL_PASSWORD: "tmqh uzrt kdnt kzum"
+      SPRING_MAIL_PASSWORD: tmqh uzrt kdnt kzum
+      
+      # App config
       APP_FRONTEND_URL: http://localhost:5173
       APP_JWT_SECRET: a9L3vT7xQ2mN8bR4K0uY1pZ6WdCfJsXeH
       APP_JWT_EXPIRATION_MS: 86400000
+      
+      # JVM options
       JAVA_OPTS: "-Xms256m -Xmx512m"
     networks:
       - backend-network
@@ -104,21 +137,34 @@ services:
       retries: 3
       start_period: 60s
 
+  # ============================================
+  # API Gateway
+  # ============================================
   api-gateway:
     build:
       context: ./api-gw
       dockerfile: Dockerfile
     container_name: api-gateway
+    restart: unless-stopped
     depends_on:
       users-service:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     ports:
       - "9090:9090"
     environment:
+      # Keycloak JWT validation (usar nombre de servicio Docker)
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/tesina/protocol/openid-connect/certs
+      
+      # Microservices URLs (usar nombres de servicio Docker)
       API_GW_URL_MICROSERVICIO_USUARIOS: http://users-service:9091
+      
+      # Rate limiting config
       APP_RATE_LIMIT_DEFAULT_CAPACITY: 20
       APP_RATE_LIMIT_DEFAULT_REFILL_TOKENS: 10
+      
+      # JVM options
       JAVA_OPTS: "-Xms256m -Xmx512m"
     networks:
       - backend-network
@@ -129,10 +175,19 @@ services:
       retries: 3
       start_period: 60s
 
+# ============================================
+# NETWORKS
+# ============================================
 networks:
   backend-network:
     driver: bridge
+    name: papersrl-network
 
+# ============================================
+# VOLUMES
+# ============================================
 volumes:
   kc_pgdata:
+    name: keycloak-postgres-data
   app_pgdata:
+    name: app-postgres-data

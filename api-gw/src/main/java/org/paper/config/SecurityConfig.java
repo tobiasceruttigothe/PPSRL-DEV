@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .cors(cors -> {}) // ← AGREGAR ESTO: Habilita CORS (usa el CorsWebFilter)
                 .authorizeExchange(exchanges -> exchanges
                         // Solo ADMIN puede acceder al microservicio de usuarios
+                        .pathMatchers("/actuator/health", "/actuator/info").permitAll()
                         .pathMatchers("/api/usuarios/**").hasRole("ADMIN")
                         //Revisar
                         .pathMatchers("/api/auth/**").permitAll()
