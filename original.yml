@@ -119,7 +119,7 @@ services:
       SPRING_MAIL_HOST: smtp.gmail.com
       SPRING_MAIL_PORT: 587
       SPRING_MAIL_USERNAME: no.reply.papersrl@gmail.com
-      SPRING_MAIL_PASSWORD: tmqh uzrt kdnt kzum
+      SPRING_MAIL_PASSWORD: .
       
       # App config
       APP_FRONTEND_URL: http://localhost:5173
