@@ -19,6 +19,8 @@ public class CorsConfig {
         // Orígenes permitidos
         corsConfig.setAllowedOrigins(List.of(
                 "http://localhost:5173"
+                //dev todos pueden acceder
+                ,"*"
                 // En producción, agregar dominio real:
 
         ));
