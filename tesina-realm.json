@@ -30,7 +30,26 @@
         "name": "CLIENTE",
         "description": "Usuario que ha completado el registro y puede usar la aplicación"
       }
-    ]
+    ],
+    "client": {
+      "realm-management": [
+        {
+          "name": "view-users",
+          "description": "View users",
+          "composite": false
+        },
+        {
+          "name": "manage-users",
+          "description": "Manage users",
+          "composite": false
+        },
+        {
+          "name": "query-users",
+          "description": "Query users",
+          "composite": false
+        }
+      ]
+    }
   },
   "clients": [
     {
@@ -42,19 +61,25 @@
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
       "protocol": "openid-connect",
-      "fullScopeAllowed": false,
-      "access": {
-        "view": true,
-        "configure": true,
-        "manage": true
-      },
-      "serviceAccountClientRoles": {
-        "realm-management": [
-          "view-users",
-          "manage-users",
-          "query-users"
-        ]
-      }
+      "fullScopeAllowed": false
+    }
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "email",
+      "roles": [
+        "ADMIN",
+        "CLIENTE",
+        "INTERESADO"
+      ]
+    },
+    {
+      "client": "backend-service",
+      "roles": [
+        "view-users",
+        "manage-users",
+        "query-users"
+      ]
     }
   ]
 }
