@@ -21,7 +21,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/api/usuarios/create"
+                                "/api/usuarios/create",
+                                "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );
