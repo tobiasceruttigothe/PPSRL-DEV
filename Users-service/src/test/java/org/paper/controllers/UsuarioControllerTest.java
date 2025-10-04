@@ -9,10 +9,13 @@ import org.paper.repository.UsuarioRepository;
 import org.paper.services.UsuarioActivacionService;
 import org.paper.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.paper.config.SecurityConfig;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -24,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UsuarioController.class)
+@Import(SecurityConfig.class)
 class UsuarioControllerTest {
 
     @Autowired
@@ -62,6 +66,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testAsignarRolAdmin() throws Exception {
         mockMvc.perform(put("/api/usuarios/123/rol/admin"))
                 .andExpect(status().isOk())
@@ -71,6 +76,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testAsignarRolCliente() throws Exception {
         mockMvc.perform(put("/api/usuarios/123/rol/cliente"))
                 .andExpect(status().isOk())
@@ -80,6 +86,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testEliminarUsuario() throws Exception {
         when(usuarioService.eliminarUsuario("testUser"))
                 .thenReturn(ResponseEntity.ok("Usuario eliminado correctamente"));
@@ -90,6 +97,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testListarUsuarios() throws Exception {
         UsuarioResponseDTO user = new UsuarioResponseDTO(
                 UUID.randomUUID().toString(),
@@ -109,6 +117,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testListarUsuariosClientes() throws Exception {
         when(usuarioService.listarUsuariosPorRol("CLIENTE"))
                 .thenReturn(ResponseEntity.ok(List.of()));
@@ -118,6 +127,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testListarUsuariosAdmins() throws Exception {
         when(usuarioService.listarUsuariosPorRol("ADMIN"))
                 .thenReturn(ResponseEntity.ok(List.of()));
@@ -127,6 +137,7 @@ class UsuarioControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     void testListarUsuariosInteresados() throws Exception {
         when(usuarioService.listarUsuariosPorRol("INTERESADO"))
                 .thenReturn(ResponseEntity.ok(List.of()));
