@@ -18,68 +18,35 @@
   ],
   "roles": {
     "realm": [
-      {
-        "name": "ADMIN",
-        "description": "Administrador del sistema"
-      },
-      {
-        "name": "INTERESADO",
-        "description": "Usuario interesado que ha iniciado el proceso de registro"
-      },
-      {
-        "name": "CLIENTE",
-        "description": "Usuario que ha completado el registro y puede usar la aplicación"
-      }
-    ],
-    "client": {
-      "realm-management": [
-        {
-          "name": "view-users",
-          "description": "View users",
-          "composite": false
-        },
-        {
-          "name": "manage-users",
-          "description": "Manage users",
-          "composite": false
-        },
-        {
-          "name": "query-users",
-          "description": "Query users",
-          "composite": false
-        }
-      ]
-    }
+      { "name": "ADMIN", "description": "Administrador del sistema" },
+      { "name": "INTERESADO", "description": "Usuario interesado que ha iniciado el proceso de registro" },
+      { "name": "CLIENTE", "description": "Usuario que ha completado el registro y puede usar la aplicación" }
+    ]
   },
   "clients": [
     {
       "clientId": "backend-service",
-      "enabled": true,
       "secret": "qL9zabLf/LtV48DrZsG6ivGm9/5C8TedHqawXXisvUA=",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
       "serviceAccountsEnabled": true,
       "directAccessGrantsEnabled": true,
       "publicClient": false,
-      "clientAuthenticatorType": "client-secret",
-      "protocol": "openid-connect",
-      "fullScopeAllowed": false
+      "protocol": "openid-connect"
     }
   ],
-  "scopeMappings": [
+  "users": [
     {
-      "clientScope": "email",
-      "roles": [
-        "ADMIN",
-        "CLIENTE",
-        "INTERESADO"
-      ]
-    },
-    {
-      "client": "backend-service",
-      "roles": [
-        "view-users",
-        "manage-users",
-        "query-users"
-      ]
+      "username": "service-account-backend-service",
+      "enabled": true,
+      "serviceAccountClientId": "backend-service",
+      "clientRoles": {
+        "realm-management": [
+          "view-users",
+          "manage-users",
+          "query-users"
+        ]
+      }
     }
   ]
 }
