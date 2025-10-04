@@ -58,6 +58,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <!-- Spring WebFlux para WebClient -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
