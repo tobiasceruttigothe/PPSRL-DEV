@@ -1,0 +1,60 @@
+{
+  "realm": "tesina",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": true,
+  "resetPasswordAllowed": true,
+  "requiredActions": [
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": true
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Administrador del sistema"
+      },
+      {
+        "name": "INTERESADO",
+        "description": "Usuario interesado que ha iniciado el proceso de registro"
+      },
+      {
+        "name": "CLIENTE",
+        "description": "Usuario que ha completado el registro y puede usar la aplicación"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "backend-service",
+      "enabled": true,
+      "secret": "qL9zabLf/LtV48DrZsG6ivGm9/5C8TedHqawXXisvUA=",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "access": {
+        "view": true,
+        "configure": true,
+        "manage": true
+      },
+      "serviceAccountClientRoles": {
+        "realm-management": [
+          "view-users",
+          "manage-users",
+          "query-users"
+        ]
+      }
+    }
+  ]
+}
