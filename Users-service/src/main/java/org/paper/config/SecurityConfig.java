@@ -14,18 +14,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF para APIs stateless
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(
-                    "/v3/api-docs/**",
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/actuator/**" // Permite el acceso público a los endpoints de Actuator para el healthcheck
-                ).permitAll()
-                .anyRequest().authenticated() // Requiere autenticación para cualquier otra ruta
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt()); // Configura como un resource server que valida JWTs
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authorize -> authorize
+                        // Permitir acceso público a Swagger UI y documentación
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/actuator/**"
+                        ).permitAll()
+                        // Permitir acceso público a endpoints de autenticación
+                        .requestMatchers(
+                                "/api/auth/**"
+                        ).permitAll()
+                        // Requiere autenticación para todo lo demás
+                        .anyRequest().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt());
 
         return http.build();
     }

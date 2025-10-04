@@ -13,17 +13,22 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-            .csrf(ServerHttpSecurity.CsrfSpec::disable) // Deshabilitar CSRF es común en gateways de API stateless
-            .authorizeExchange(exchanges -> exchanges
-                .pathMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/webjars/**"
-                ).permitAll() // Permite el acceso público a las rutas de Swagger
-                .anyExchange().authenticated() // Requiere autenticación para cualquier otra ruta
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt()); // Configura el gateway como un resource server que valida JWTs
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(exchanges -> exchanges
+                        // Permitir TODO para Swagger/OpenAPI (temporal para debugging)
+                        .pathMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/actuator/**",
+                                "/api/auth/**"
+                        ).permitAll()
+                        // Requiere autenticación para todo lo demás
+                        .anyExchange().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt());
 
         return http.build();
     }

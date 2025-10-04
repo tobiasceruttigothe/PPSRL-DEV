@@ -18,6 +18,7 @@ public class CustomHeadersConfig {
     public GlobalFilter customHeadersFilter() {
         return (exchange, chain) -> {
             return exchange.getPrincipal()
+                    .filter(principal -> principal instanceof JwtAuthenticationToken)
                     .cast(JwtAuthenticationToken.class)
                     .map(auth -> {
                         Jwt jwt = auth.getToken();
@@ -39,6 +40,7 @@ public class CustomHeadersConfig {
 
                         return exchange.mutate().request(request).build();
                     })
+                    .switchIfEmpty(Mono.just(exchange))  // Si no hay JWT, continuar sin headers
                     .flatMap(chain::filter);
         };
     }
