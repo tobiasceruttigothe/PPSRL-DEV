@@ -20,8 +20,9 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui.html",
-                    "/swagger-ui/**"
-                ).permitAll() // Permite el acceso público a las rutas de Swagger
+                    "/swagger-ui/**",
+                    "/actuator/**" // Permite el acceso público a los endpoints de Actuator para el healthcheck
+                ).permitAll()
                 .anyRequest().authenticated() // Requiere autenticación para cualquier otra ruta
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt()); // Configura como un resource server que valida JWTs
