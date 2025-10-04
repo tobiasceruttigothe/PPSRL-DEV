@@ -24,8 +24,8 @@ public class SwaggerConfig {
 
                 // Ruta para exponer la documentación OpenAPI del microservicio de usuarios
                 .route("usuarios-docs", r -> r
-                        .path("/usuarios-docs")
-                        .filters(f -> f.rewritePath("/usuarios-docs", "/v3/api-docs"))
+                        .path("/v3/api-docs/usuarios")
+                        .filters(f -> f.rewritePath("/v3/api-docs/usuarios", "/v3/api-docs"))
                         .uri(uriUsuarios))
 
                 .build();
