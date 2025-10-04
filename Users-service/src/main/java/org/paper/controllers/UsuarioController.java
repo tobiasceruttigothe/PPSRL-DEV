@@ -90,6 +90,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{userId}/rol/admin")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Asignar rol de administrador",
             description = """
@@ -118,6 +119,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{userId}/rol/cliente")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Asignar rol de cliente",
             description = """
@@ -146,6 +148,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/eliminate/{username}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Eliminar usuario",
             description = """
@@ -174,6 +177,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/list/users")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Listar todos los usuarios",
             description = """
@@ -195,6 +199,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/list/users/interested")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Listar usuarios interesados",
             description = """
@@ -208,6 +213,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/list/users/clients")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Listar usuarios clientes",
             description = """
@@ -221,6 +227,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/list/users/admins")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Listar administradores",
             description = """
@@ -234,6 +241,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/failed")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Listar usuarios fallidos",
             description = """
@@ -252,6 +260,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/pending")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Listar usuarios pendientes",
             description = """
@@ -269,6 +278,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/retry/{userId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @Operation(
             summary = "Reintentar activación de usuario",
             description = """
