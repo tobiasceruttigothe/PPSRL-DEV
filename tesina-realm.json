@@ -7,53 +7,14 @@
   "duplicateEmailsAllowed": false,
   "verifyEmail": true,
   "resetPasswordAllowed": true,
-  "userProfile": {
-    "attributes": [
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
       {
-        "name": "username",
-        "displayName": "${username}",
-        "validations": {
-          "length": { "min": 5, "max": 50 }
-        },
-        "permissions": {
-          "view": ["user", "admin"],
-          "edit": ["user", "admin"]
-        }
-      },
-      {
-        "name": "email",
-        "displayName": "${email}",
-        "validations": {
-          "email": {}
-        },
-        "permissions": {
-          "view": ["user", "admin"],
-          "edit": ["user", "admin"]
-        }
-      },
-      {
-        "name": "razonSocial",
-        "displayName": "Razón Social",
-        "validations": {
-          "length": { "max": 100 }
-        },
-        "permissions": {
-          "view": ["user", "admin"],
-          "edit": ["user", "admin"]
-        }
-      },
-      {
-        "name": "firstName",
-        "permissions": {
-          "view": ["admin"],
-          "edit": ["admin"]
-        }
-      },
-      {
-        "name": "lastName",
-        "permissions": {
-          "view": ["admin"],
-          "edit": ["admin"]
+        "providerId": "user-profile",
+        "config": {
+          "config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":5,\"max\":50}},\"permissions\":{\"view\":[\"user\",\"admin\"],\"edit\":[\"user\",\"admin\"]}},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{}},\"permissions\":{\"view\":[\"user\",\"admin\"],\"edit\":[\"user\",\"admin\"]}},{\"name\":\"razonSocial\",\"displayName\":\"Razón Social\",\"validations\":{\"length\":{\"max\":100}},\"permissions\":{\"view\":[\"user\",\"admin\"],\"edit\":[\"user\",\"admin\"]}},{\"name\":\"firstName\",\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]}},{\"name\":\"lastName\",\"permissions\":{\"view\":[\"admin\"],\"edit\":[\"admin\"]}}]}"
+          ]
         }
       }
     ]
