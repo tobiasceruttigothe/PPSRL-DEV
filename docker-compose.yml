@@ -41,7 +41,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
       KC_HEALTH_ENABLED: "true"
-      KC_FEATURES: user-profile
+      KC_FEATURES: declarative-user-profile
     command: start-dev --import-realm
     networks:
       - backend-network
