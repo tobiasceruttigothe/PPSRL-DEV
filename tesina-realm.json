@@ -38,7 +38,7 @@
   "clients": [
     {
       "clientId": "backend-service",
-      "secret": "qL9zabLf/LtV48DrZsG6ivGm9/5C8TedHqawXXisvUA=",
+      "secret": "CHANGE_ME_IN_YOUR_ENVIRONMENT",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "serviceAccountsEnabled": true,
